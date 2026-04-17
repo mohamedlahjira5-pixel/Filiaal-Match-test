@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="filiaalmatch_icon.ico">
+  <title>Filiaal Match - Autoglass Clinic</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 60px 0 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .search-container {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin: 0 auto;
+      max-width: 2000px;
+      position: relative;
+    }
+
+    h1 { color: #2c7be5; margin-bottom: 20px; font-weight: 600; text-align: center; }
+    .description { color: #5e6e82; margin-bottom: 25px; line-height: 1.5; text-align: center; }
+
+    .search-input {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .input-wrapper { position: relative; width: 300px; }
+
+    input[type="text"] {
+      padding: 12px 15px;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 16px;
+      border: 2px solid #e0e4e9;
+      border-radius: 6px;
+      transition: all 0.3s;
+    }
+    input[type="text"]:focus {
+      border-color: #2c7be5;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(44,123,229,0.2);
+    }
+
+    /* Dropdown */
+    .suggestions {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 2px solid #2c7be5;
+      border-radius: 6px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+      z-index: 200;
+      max-height: 260px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .suggestion-item {
+      padding: 9px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #2d3748;
+      border-bottom: 1px solid #f0f4f8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.12s;
+    }
+    .suggestion-item:last-child { border-bottom: none; }
+    .suggestion-item:hover, .suggestion-item.active { background: #e8f0fd; }
+
+    .sug-city { font-weight: 600; flex: 1; }
+    .sug-city em { font-style: normal; font-weight: 800; color: #2c7be5; }
+    .sug-meta { font-size: 12px; color: #8a9ab0; white-space: nowrap; }
+
+    button {
+      padding: 12px 25px;
+      background-color: #2c7be5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+    button:hover { background-color: #1a68d4; transform: translateY(-2px); }
+
+    .search-hint { text-align: center; font-size: 13px; color: #8a9ab0; margin-bottom: 20px; }
+
+    /* Admin link */
+    .admin-link {
+      position: absolute;
+      top: 12px;
+      right: 20px;
+      font-size: 12px;
+      color: #a0aec0;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.2s;
+    }
+    .admin-link:hover { color: #2c7be5; }
+
+    .signature {
+      position: absolute;
+      top: 32px;
+      right: 20px;
+      font-style: italic;
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    #resultaat {
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      border-left: 4px solid #2c7be5;
+      text-align: left;
+    }
+
+    .highlight { color: #2c7be5; font-weight: 600; }
+    .blue-bold { color: #2c7be5; font-weight: bold; }
+
+    .filiaal-item {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px dashed #e0e4e9;
+    }
+    .filiaal-item:last-child { border-bottom: none; }
+
+    .leave-period {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #fff4e6;
+      border-left: 4px solid #ff9900;
+      font-style: italic;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .filiaal-info {
+      margin-top: 15px;
+      padding: 15px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      border-left: 4px solid #2c7be5;
+      display: none;
+    }
+    .filiaal-info p { margin: 8px 0; }
+
+    .info-toggle {
+      background-color: #f0f4f8;
+      border: none;
+      color: #2c7be5;
+      padding: 8px 15px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .info-toggle:hover { background-color: #e0e9f5; transform: none; }
+
+    .city-badge {
+      display: inline-block;
+      background: #ebf8ff;
+      color: #2b6cb0;
+      font-size: 12px;
+      border-radius: 4px;
+      padding: 2px 7px;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+
+    .no-results { text-align: center; color: #6c757d; font-style: italic; }
+    .system-info { font-size: 12px; color: #6c757d; margin-top: 5px; }
+
+    @media (max-width: 768px) {
+      .search-container { padding: 20px; }
+      .input-wrapper { width: 100%; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="search-container">
+    <h1>Zoek je Autoglass Clinic Filiaal</h1>
+    <p class="description">Zoek op postcode, gemeente of naam van het filiaal:</p>
+
+    <a class="admin-link" href="verlof_beheer.html" title="Verlofperiodes beheren">
+      ✏️ Verlofbeheer
+    </a>
+
+    <div class="search-input">
+      <div class="input-wrapper">
+        <input
+          type="text"
+          id="zoekVeld"
+          placeholder="Bijv. 3500, Hasselt of Malme..."
+          autocomplete="off"
+          oninput="handleInput()"
+          onkeydown="handleKeydown(event)"
+        >
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+      <button onclick="zoekFiliaal()">Zoek</button>
+      <button id="mapButton" style="display:none;" onclick="openMap()">Bekijk op Kaart</button>
+    </div>
+
+    <p class="search-hint">Typ een postcode, gemeente of filiaalnaam — accenten zijn niet nodig</p>
+
+    <div id="resultaat"></div>
+  </div>
+
+  <div class="signature"><p>By Lahjira M.</p></div>
+
+  <script>
+    // ── State ─────────────────────────────────────────────────────────────────
+    let filiaalData  = null;
+    let verlofData   = {};
+    let cityLookup   = {};   // cityName -> [{postcode, branch}]
+    let activeIndex  = -1;
+    let currentSugs  = [];   // [{label, postcode, branchKey}]
+
+    // ── Load all data ─────────────────────────────────────────────────────────
+    async function laadAlles() {
+      try {
+        const [r1, r2, r3] = await Promise.all([
+          fetch('filialen_data.json'),
+          fetch('verlof.json'),
+          fetch('city_lookup.json')
+        ]);
+        filiaalData = await r1.json();
+        verlofData  = await r2.json();
+        cityLookup  = await r3.json();
+      } catch (e) {
+        document.getElementById('resultaat').innerHTML =
+          '<p style="color:red;">⚠️ Kon data niet laden. Controleer of alle JSON-bestanden aanwezig zijn.</p>';
+        console.error(e);
+      }
+    }
+
+    laadAlles();
+
+    // ── Accent-insensitive normalize ──────────────────────────────────────────
+    function norm(str) {
+      return String(str)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[()]/g, '')
+        .trim();
+    }
+
+    function highlightMatch(text, query) {
+      const q = norm(query);
+      const t = norm(text);
+      const i = t.indexOf(q);
+      if (i === -1) return text;
+      return text.slice(0, i)
+        + '<em>' + text.slice(i, i + query.length) + '</em>'
+        + text.slice(i + query.length);
+    }
+
+    // ── Build suggestion list ─────────────────────────────────────────────────
+    function buildSuggestions(query) {
+      const q = norm(query);
+      const seen = new Set();
+      const results = [];
+
+      // 1. Branch name matches
+      Object.entries(filiaalData).forEach(([key, info]) => {
+        if (norm(key).includes(q) || norm(info.displayName).includes(q)) {
+          const label = info.displayName;
+          if (!seen.has('branch:' + key)) {
+            seen.add('branch:' + key);
+            results.push({ type: 'branch', label, key, meta: 'filiaal' });
+          }
+        }
+      });
+
+      // 2. City name matches
+      Object.entries(cityLookup).forEach(([city, entries]) => {
+        if (norm(city).includes(q)) {
+          entries.forEach(({ postcode, branch }) => {
+            const uid = city + ':' + postcode;
+            if (!seen.has(uid)) {
+              seen.add(uid);
+              const branchInfo = filiaalData[branch];
+              const meta = branchInfo ? branchInfo.displayName : branch;
+              results.push({ type: 'city', label: city, postcode, key: branch, meta });
+            }
+          });
+        }
+      });
+
+      // Sort: exact starts-with first, then alphabetical
+      results.sort((a, b) => {
+        const aNorm = norm(a.label);
+        const bNorm = norm(b.label);
+        const aStarts = aNorm.startsWith(q) ? 0 : 1;
+        const bStarts = bNorm.startsWith(q) ? 0 : 1;
+        if (aStarts !== bStarts) return aStarts - bStarts;
+        return aNorm.localeCompare(bNorm);
+      });
+
+      return results.slice(0, 12); // max 12 suggestions
+    }
+
+    // ── Input handler ─────────────────────────────────────────────────────────
+    function handleInput() {
+      const val = document.getElementById('zoekVeld').value.trim();
+      document.getElementById('mapButton').style.display = val ? 'inline-block' : 'none';
+      activeIndex = -1;
+
+      if (!filiaalData || !val || /^\d+$/.test(val)) {
+        hideSuggestions();
+        return;
+      }
+
+      currentSugs = buildSuggestions(val);
+      renderSuggestions(val);
+    }
+
+    function renderSuggestions(query) {
+      const box = document.getElementById('suggestions');
+      if (!currentSugs.length) { hideSuggestions(); return; }
+
+      box.innerHTML = currentSugs.map((s, i) => `
+        <div class="suggestion-item" data-index="${i}" onmousedown="pickSuggestion(${i})">
+          <span class="sug-city">${highlightMatch(s.label, query)}</span>
+          <span class="sug-meta">${s.type === 'city' ? s.postcode + ' · ' : ''}${s.meta}</span>
+        </div>
+      `).join('');
+      box.style.display = 'block';
+    }
+
+    function hideSuggestions() {
+      document.getElementById('suggestions').style.display = 'none';
+      currentSugs = [];
+      activeIndex = -1;
+    }
+
+    function pickSuggestion(i) {
+      const s = currentSugs[i];
+      if (!s) return;
+      hideSuggestions();
+      if (s.type === 'city') {
+        // Search by postcode directly
+        document.getElementById('zoekVeld').value = String(s.postcode);
+        zoekByPostcode(s.postcode);
+      } else {
+        document.getElementById('zoekVeld').value = s.key;
+        zoekByBranchKey(s.key);
+      }
+    }
+
+    function handleKeydown(e) {
+      const box   = document.getElementById('suggestions');
+      const items = box.querySelectorAll('.suggestion-item');
+      if (box.style.display === 'none' || !items.length) {
+        if (e.key === 'Enter') zoekFiliaal();
+        return;
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIndex = Math.min(activeIndex + 1, items.length - 1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIndex = Math.max(activeIndex - 1, -1);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeIndex >= 0) pickSuggestion(activeIndex);
+        else { hideSuggestions(); zoekFiliaal(); }
+        return;
+      } else if (e.key === 'Escape') {
+        hideSuggestions(); return;
+      }
+      items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+    }
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.input-wrapper')) hideSuggestions();
+    });
+
+    // ── Search entry point ────────────────────────────────────────────────────
+    function zoekFiliaal() {
+      const raw = document.getElementById('zoekVeld').value.trim();
+      hideSuggestions();
+
+      if (!filiaalData) {
+        document.getElementById('resultaat').innerHTML = '<p>Data wordt nog geladen, probeer opnieuw.</p>';
+        return;
+      }
+      if (!raw) {
+        document.getElementById('resultaat').innerHTML =
+          '<div class="filiaal-item"><p>Voer een postcode, gemeente of naam in om te zoeken.</p></div>';
+        return;
+      }
+
+      if (/^\d+$/.test(raw)) {
+        zoekByPostcode(parseInt(raw));
+      } else {
+        // Try branch key first, then city, then branch display name
+        if (filiaalData[raw.toUpperCase()]) {
+          zoekByBranchKey(raw.toUpperCase());
+        } else {
+          zoekByTekst(raw);
+        }
+      }
+    }
+
+    function zoekByPostcode(pc) {
+      const gevonden = Object.entries(filiaalData)
+        .filter(([, info]) => info.postcodes.includes(pc))
+        .map(([key, info]) => ({ key, ...info }));
+      toonResultaten(gevonden, `postcode <strong>${pc}</strong>`);
+    }
+
+    function zoekByBranchKey(key) {
+      const info = filiaalData[key];
+      if (info) toonResultaten([{ key, ...info }], `"<strong>${info.displayName}</strong>"`);
+      else zoekByTekst(key);
+    }
+
+    function zoekByTekst(query) {
+      const q = norm(query);
+
+      // Match branches by name
+      let gevonden = Object.entries(filiaalData)
+        .filter(([key, info]) => norm(key).includes(q) || norm(info.displayName).includes(q))
+        .map(([key, info]) => ({ key, ...info }));
+
+      // Also match cities → postcodes → branches
+      if (!gevonden.length) {
+        const pcSet = new Set();
+        Object.entries(cityLookup).forEach(([city, entries]) => {
+          if (norm(city).includes(q)) entries.forEach(e => pcSet.add(e.postcode));
+        });
+        if (pcSet.size) {
+          const branchSet = new Map();
+          pcSet.forEach(pc => {
+            Object.entries(filiaalData).forEach(([key, info]) => {
+              if (info.postcodes.includes(pc) && !branchSet.has(key)) {
+                branchSet.set(key, { key, ...info });
+              }
+            });
+          });
+          gevonden = [...branchSet.values()];
+        }
+      }
+
+      toonResultaten(gevonden, `"<strong>${query}</strong>"`);
+    }
+
+    // ── Render results ────────────────────────────────────────────────────────
+    function toonResultaten(gevonden, labelHTML) {
+      const div = document.getElementById('resultaat');
+
+      if (!gevonden.length) {
+        div.innerHTML = `
+          <div class="filiaal-item no-results">
+            <p>Geen filiaal gevonden voor ${labelHTML}.</p>
+            <p class="system-info">Probeer een andere postcode, gemeente of naam.</p>
+          </div>`;
+        return;
+      }
+
+      let html = `<div><p>Voor ${labelHTML} ${gevonden.length === 1 ? 'is 1 filiaal' : `zijn ${gevonden.length} filialen`} gevonden:</p></div>`;
+
+      gevonden.forEach((filiaal, index) => {
+        const verlof  = (verlofData[filiaal.key] || filiaal.verlof || '').trim();
+        const urenHTML = filiaal.hours
+          ? filiaal.hours.split('\n').map(r => `<p style="margin-left:20px;">${r}</p>`).join('')
+          : '<p style="margin-left:20px;">Niet beschikbaar</p>';
+
+        html += `
+          <div class="filiaal-item">
+            <p><strong>Filiaal:</strong> <span class="highlight">${filiaal.displayName}</span></p>
+            ${filiaal.verantwoordelijke ? `<p><strong>Verantwoordelijke:</strong> ${filiaal.verantwoordelijke}</p>` : ''}
+            <p class="highlight">Het dossier wordt in
+              <span class="blue-bold">${filiaal.inSalesForce ? 'SALES FORCE' : 'PLANMANAGER'}</span>
+              opgesteld.
+            </p>
+            ${verlof ? `<div class="leave-period"><p><strong>Geplande verlofperiode:</strong> ${verlof}</p></div>` : ''}
+            <button class="info-toggle" onclick="toggleInfo(${index})">Meer details</button>
+            <div id="filiaal-info-${index}" class="filiaal-info">
+              ${filiaal.address ? `<p><strong>Adres:</strong> ${filiaal.address}</p>` : ''}
+              ${filiaal.phone   ? `<p><strong>Telefoon:</strong> ${filiaal.phone}</p>` : ''}
+              ${filiaal.email   ? `<p><strong>Email:</strong> <a href="mailto:${filiaal.email}">${filiaal.email}</a></p>` : ''}
+              <p><strong>Openingsuren:</strong></p>${urenHTML}
+            </div>
+          </div>`;
+      });
+
+      div.innerHTML = html;
+    }
+
+    function toggleInfo(index) {
+      const d = document.getElementById(`filiaal-info-${index}`);
+      d.style.display = d.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function openMap() {
+      const val = document.getElementById('zoekVeld').value.trim();
+      if (!val) return;
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(val)}`, '_blank');
+    }
+  </script>
+</body>
+</html>

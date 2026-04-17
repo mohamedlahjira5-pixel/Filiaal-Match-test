@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verlofbeheer – Autoglass Clinic</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      padding: 40px 20px;
+      color: #2d3748;
+    }
+
+    .page {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: #2c7be5;
+      color: white;
+      border-radius: 12px 12px 0 0;
+      padding: 28px 30px 22px;
+    }
+
+    header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    header p  { font-size: 14px; opacity: 0.85; }
+
+    .uitleg {
+      background: #fffbea;
+      border-left: 4px solid #f6ad55;
+      padding: 14px 18px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #744210;
+    }
+
+    .uitleg strong { display: block; margin-bottom: 4px; font-size: 15px; }
+
+    .grid {
+      background: #fff;
+      padding: 24px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .rij {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #edf2f7;
+    }
+    .rij:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .filiaal-naam {
+      min-width: 200px;
+      font-weight: 600;
+      font-size: 14px;
+      padding-top: 10px;
+    }
+
+    .invoer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .invoer input[type="text"] {
+      padding: 9px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    .invoer input[type="text"]:focus {
+      border-color: #2c7be5;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(44,123,229,0.15);
+    }
+    .invoer input[type="text"].heeft-verlof {
+      border-color: #f6ad55;
+      background: #fffbea;
+    }
+
+    .wis-btn {
+      background: none;
+      border: none;
+      color: #a0aec0;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 6px 4px;
+      line-height: 1;
+      align-self: flex-start;
+      margin-top: 6px;
+      transition: color 0.2s;
+    }
+    .wis-btn:hover { color: #e53e3e; }
+
+    .footer {
+      background: #fff;
+      border-top: 1px solid #edf2f7;
+      border-radius: 0 0 12px 12px;
+      padding: 20px 30px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn-genereer {
+      background: #2c7be5;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-genereer:hover { background: #1a68d4; }
+
+    .btn-download {
+      background: #38a169;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: none;
+    }
+    .btn-download:hover { background: #2f855a; }
+
+    .btn-reset {
+      background: none;
+      border: 2px solid #e2e8f0;
+      color: #718096;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-left: auto;
+      transition: all 0.2s;
+    }
+    .btn-reset:hover { border-color: #e53e3e; color: #e53e3e; }
+
+    .output-blok {
+      margin-top: 0;
+      background: #1a202c;
+      border-radius: 0 0 12px 12px;
+      padding: 22px 30px;
+      display: none;
+    }
+
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .output-header span {
+      color: #a0aec0;
+      font-size: 13px;
+      font-family: monospace;
+    }
+
+    .kopieer-btn {
+      background: #2d3748;
+      color: #a0aec0;
+      border: 1px solid #4a5568;
+      border-radius: 5px;
+      padding: 5px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .kopieer-btn:hover { background: #4a5568; color: white; }
+    .kopieer-btn.gekopieerd { background: #276749; color: #9ae6b4; border-color: #276749; }
+
+    pre {
+      color: #e2e8f0;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.6;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .stap-badge {
+      display: inline-block;
+      background: #ebf4ff;
+      color: #2c7be5;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-right: 6px;
+    }
+
+    .instructies-stap {
+      font-size: 13px;
+      margin-top: 6px;
+      color: #744210;
+    }
+
+    @media (max-width: 600px) {
+      .filiaal-naam { min-width: unset; width: 100%; padding-top: 0; }
+      .rij { flex-direction: column; gap: 8px; }
+      .wis-btn { align-self: flex-end; margin-top: -36px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>✏️ Verlofperiodes beheren</h1>
+    <p>Autoglass Clinic — intern beheer</p>
+  </header>
+
+  <div class="uitleg">
+    <strong>Hoe werkt het?</strong>
+    <span class="stap-badge">1</span> Vul de verlofperiode in naast het filiaal (of laat leeg als het filiaal open is).<br>
+    <span class="stap-badge">2</span> Klik op <strong>Genereer verlof.json</strong>.<br>
+    <span class="stap-badge">3</span> Download het bestand en upload het naar GitHub ter vervanging van het oude <code>verlof.json</code>.<br>
+    <p class="instructies-stap">💡 Oranje velden zijn filialen met een ingevulde verlofperiode.</p>
+  </div>
+
+  <div class="grid" id="grid">
+    <!-- Filled by JS -->
+  </div>
+
+  <div class="footer">
+    <button class="btn-genereer" onclick="genereer()">📋 Genereer verlof.json</button>
+    <button class="btn-download" id="btnDownload" onclick="download()">⬇️ Download verlof.json</button>
+    <button class="btn-reset" onclick="wisAlles()">Alles wissen</button>
+  </div>
+
+  <div class="output-blok" id="outputBlok">
+    <div class="output-header">
+      <span>verlof.json — kopieer en vervang op GitHub</span>
+      <button class="kopieer-btn" id="kopieerBtn" onclick="kopieer()">Kopiëren</button>
+    </div>
+    <pre id="outputPre"></pre>
+  </div>
+
+</div>
+
+<script>
+  // ── Filialen (zelfde volgorde als verlof.json) ────────────────────────────
+  const FILIALEN = [
+    { key: "AALST",            label: "AALST (Erpe-Mere)" },
+    { key: "BORGERHOUT",       label: "ANTWERPEN-BORGERHOUT" },
+    { key: "WILRIJK",          label: "ANTWERPEN-WILRIJK" },
+    { key: "ARLON",            label: "ARLON" },
+    { key: "ASSE",             label: "ASSE" },
+    { key: "TERNAT",           label: "TERNAT (Service Point)" },
+    { key: "DENDERMONDE",      label: "DENDERMONDE" },
+    { key: "BASTOGNE",         label: "BASTOGNE" },
+    { key: "BRUGGE",           label: "BRUGGE (Sint-Andries)" },
+    { key: "ANDERLECHT",       label: "BRUSSEL-ANDERLECHT" },
+    { key: "ZAVENTEM",         label: "BRUSSEL-ZAVENTEM" },
+    { key: "CHARLEROI",        label: "CHARLEROI" },
+    { key: "DINANT",           label: "DINANT" },
+    { key: "ENGIS",            label: "ENGIS" },
+    { key: "EUPEN",            label: "EUPEN (Lontzen)" },
+    { key: "GEEL",             label: "GEEL" },
+    { key: "GENK",             label: "GENK" },
+    { key: "GENT",             label: "GENT (Lovendegem)" },
+    { key: "HASSELT",          label: "HASSELT" },
+    { key: "HEIST OP DEN BERG",label: "HEIST-OP-DEN-BERG" },
+    { key: "IEPER",            label: "IEPER" },
+    { key: "KORTRIJK",         label: "KORTRIJK (Kuurne)" },
+    { key: "LEUVEN",           label: "LEUVEN (Linden)" },
+    { key: "LIBRAMONT",        label: "LIBRAMONT" },
+    { key: "ANS",              label: "LIÈGE-ANS" },
+    { key: "MALMEDY",          label: "MALMÉDY" },
+    { key: "MECHELEN",         label: "MECHELEN" },
+    { key: "MELLE",            label: "MELLE" },
+    { key: "MONS",             label: "MONS (Cuesmes)" },
+    { key: "NAMUR",            label: "NAMUR" },
+    { key: "OUDENAARDE",       label: "OUDENAARDE" },
+    { key: "PELT",             label: "PELT" },
+    { key: "SINT-NIKLAAS",     label: "SINT-NIKLAAS" },
+    { key: "SOUMAGNE",         label: "SOUMAGNE" },
+    { key: "TOURNAI",          label: "TOURNAI" },
+    { key: "TURNHOUT",         label: "TURNHOUT" },
+    { key: "WAVRE",            label: "WAVRE (Mont-Saint-Guibert)" },
+  ];
+
+  // ── Build form ───────────────────────────────────────────────────────────
+  const grid = document.getElementById('grid');
+
+  FILIALEN.forEach(({ key, label }) => {
+    const rij = document.createElement('div');
+    rij.className = 'rij';
+    rij.innerHTML = `
+      <div class="filiaal-naam">${label}</div>
+      <div class="invoer">
+        <input type="text" id="inp-${key}"
+               placeholder="Bijv. Vrijdag 01/08/2025 (vanaf 16u00) t.e.m. vrijdag 15/08/2025"
+               oninput="markeer('${key}')"
+               autocomplete="off">
+      </div>
+      <button class="wis-btn" title="Wissen" onclick="wisVeld('${key}')">×</button>
+    `;
+    grid.appendChild(rij);
+  });
+
+  // Try loading current verlof.json to pre-fill
+  fetch('verlof.json')
+    .then(r => r.json())
+    .then(data => {
+      FILIALEN.forEach(({ key }) => {
+        const el = document.getElementById('inp-' + key);
+        if (el && data[key]) { el.value = data[key]; markeer(key); }
+      });
+    })
+    .catch(() => {}); // silently ignore if not reachable
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function markeer(key) {
+    const el = document.getElementById('inp-' + key);
+    el.classList.toggle('heeft-verlof', el.value.trim() !== '');
+  }
+
+  function wisVeld(key) {
+    const el = document.getElementById('inp-' + key);
+    el.value = '';
+    el.classList.remove('heeft-verlof');
+  }
+
+  function wisAlles() {
+    if (!confirm('Alle verlofperiodes wissen?')) return;
+    FILIALEN.forEach(({ key }) => wisVeld(key));
+    document.getElementById('outputBlok').style.display = 'none';
+    document.getElementById('btnDownload').style.display = 'none';
+  }
+
+  // ── Generate ─────────────────────────────────────────────────────────────
+  let gegenereerdeJSON = '';
+
+  function genereer() {
+    const obj = {
+      "_INSTRUCTIES": "Vul de verlofperiode in als tekst tussen aanhalingstekens. Laat leeg als het filiaal gewoon open is. Verander NIETS aan de namen links van de dubbele punt."
+    };
+    FILIALEN.forEach(({ key }) => {
+      obj[key] = (document.getElementById('inp-' + key).value || '').trim();
+    });
+
+    gegenereerdeJSON = JSON.stringify(obj, null, 2);
+    document.getElementById('outputPre').textContent = gegenereerdeJSON;
+    document.getElementById('outputBlok').style.display = 'block';
+    document.getElementById('btnDownload').style.display = 'inline-block';
+    document.getElementById('kopieerBtn').textContent = 'Kopiëren';
+    document.getElementById('kopieerBtn').classList.remove('gekopieerd');
+    document.getElementById('outputBlok').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function kopieer() {
+    navigator.clipboard.writeText(gegenereerdeJSON).then(() => {
+      const btn = document.getElementById('kopieerBtn');
+      btn.textContent = '✓ Gekopieerd!';
+      btn.classList.add('gekopieerd');
+      setTimeout(() => {
+        btn.textContent = 'Kopiëren';
+        btn.classList.remove('gekopieerd');
+      }, 2500);
+    });
+  }
+
+  function download() {
+    const blob = new Blob([gegenereerdeJSON], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'verlof.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>
