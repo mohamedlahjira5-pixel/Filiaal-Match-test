@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toewijzing Beheer – Autoglass Clinic</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #2c7be5; --blue-dark: #1a68d4; --blue-soft: #ebf4ff;
+      --green: #38a169; --green-soft: #f0fff4;
+      --orange: #dd6b20; --orange-soft: #fffaf0;
+      --red: #e53e3e; --red-soft: #fff5f5;
+      --gray: #718096; --gray-soft: #f7fafc;
+      --border: #e2e8f0; --text: #1a202c; --text-soft: #4a5568;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8; min-height: 100vh; padding: 32px 20px; color: var(--text);
+    }
+    .page { max-width: 1000px; margin: 0 auto; }
+
+    /* Topbar */
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .topbar h1 { font-size: 20px; font-weight: 700; color: var(--green); }
+    .topbar a { font-size: 13px; color: var(--gray); text-decoration: none; padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; background: white; transition: all .2s; }
+    .topbar a:hover { color: var(--blue); border-color: var(--blue); }
+
+    /* Action bar */
+    .actionbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .search-big {
+      flex: 1; min-width: 220px; padding: 11px 15px;
+      border: 2px solid var(--border); border-radius: 8px;
+      font-size: 15px; font-family: inherit; transition: border-color .15s;
+    }
+    .search-big:focus { border-color: var(--green); outline: none; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border: none; border-radius: 7px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-green  { background: var(--green); color: white; }
+    .btn-green:hover { background: #276749; }
+    .btn-blue   { background: var(--blue); color: white; }
+    .btn-blue:hover { background: var(--blue-dark); }
+    .btn-red    { background: var(--red); color: white; }
+    .btn-ghost  { background: white; color: var(--gray); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* Stats bar */
+    .stats-bar {
+      display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .stat-pill {
+      background: white; border-radius: 8px; padding: 10px 16px;
+      font-size: 13px; color: var(--gray); border: 1px solid var(--border);
+    }
+    .stat-pill strong { color: var(--text); font-size: 18px; display: block; }
+
+    /* Add form */
+    .add-form-card {
+      background: white; border-radius: 10px; border: 2px solid var(--green);
+      box-shadow: 0 4px 16px rgba(56,161,105,.12); margin-bottom: 16px;
+      overflow: hidden; display: none;
+    }
+    .add-form-card.open { display: block; }
+    .add-form-header {
+      background: var(--green); color: white; padding: 13px 20px;
+      font-weight: 700; font-size: 14px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .add-form-body { padding: 18px; }
+    .add-row { display: grid; grid-template-columns: 140px 1fr 220px auto; gap: 10px; align-items: end; }
+    @media (max-width: 700px) { .add-row { grid-template-columns: 1fr; } }
+
+    /* Field */
+    .field label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+    .field input, .field select {
+      width: 100%; padding: 9px 12px; border: 2px solid var(--border);
+      border-radius: 6px; font-size: 14px; font-family: inherit; transition: border-color .15s; background: white;
+    }
+    .field input:focus, .field select:focus { border-color: var(--green); outline: none; }
+
+    /* Results section */
+    .results-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px; padding: 0 2px;
+    }
+    .results-count { font-size: 13px; color: var(--gray); }
+
+    /* Entry cards */
+    .entry-group {
+      background: white; border-radius: 10px; box-shadow: 0 1px 5px rgba(0,0,0,.06);
+      margin-bottom: 10px; overflow: hidden;
+    }
+    .entry-group-header {
+      padding: 12px 16px; background: var(--gray-soft); border-bottom: 1px solid var(--border);
+      font-weight: 700; font-size: 14px; color: var(--text);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .pc-badge { background: var(--blue-soft); color: var(--blue); font-size: 13px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+
+    .entry-row {
+      display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border);
+      gap: 10px; cursor: pointer; transition: background .1s;
+    }
+    .entry-row:last-child { border-bottom: none; }
+    .entry-row:hover { background: #f8f9ff; }
+    .entry-row.selected { background: var(--blue-soft); }
+
+    .entry-city { flex: 1; font-size: 14px; font-weight: 500; }
+    .entry-branches { display: flex; gap: 5px; flex-wrap: wrap; }
+    .branch-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--blue-soft); color: var(--blue);
+      font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 12px;
+    }
+    .branch-chip.extra { background: var(--orange-soft); color: var(--orange); }
+    .entry-edit-btn { font-size: 12px; color: var(--gray); padding: 3px 8px; border: 1px solid var(--border); border-radius: 5px; background: white; cursor: pointer; flex-shrink: 0; transition: all .15s; }
+    .entry-edit-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* Edit panel */
+    .edit-panel {
+      display: none; background: #f8f9ff; border-top: 2px solid var(--blue);
+      padding: 16px 18px;
+    }
+    .edit-panel.open { display: block; }
+    .edit-panel-title { font-weight: 700; font-size: 14px; margin-bottom: 12px; color: var(--blue); }
+
+    .edit-fields { display: grid; grid-template-columns: 150px 1fr; gap: 10px; margin-bottom: 14px; align-items: start; }
+    @media (max-width: 600px) { .edit-fields { grid-template-columns: 1fr; } }
+
+    /* Branch assignment editor */
+    .assignment-section { margin-bottom: 14px; }
+    .assignment-label { font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 8px; }
+
+    .chips-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 14px; font-size: 13px; font-weight: 600;
+    }
+    .chip-assigned { background: var(--blue-soft); color: var(--blue); }
+    .chip-remove {
+      background: none; border: none; cursor: pointer;
+      color: inherit; opacity: .6; font-size: 14px; line-height: 1; padding: 0;
+      transition: opacity .1s;
+    }
+    .chip-remove:hover { opacity: 1; }
+
+    .add-branch-row { display: flex; gap: 8px; align-items: center; }
+    .add-branch-row select { padding: 7px 10px; border: 2px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+    .add-branch-row select:focus { border-color: var(--green); outline: none; }
+
+    /* Other branches same PC */
+    .sibling-info { background: #fffbea; border-left: 3px solid #f6ad55; padding: 8px 12px; border-radius: 5px; font-size: 13px; color: #744210; margin-bottom: 12px; }
+    .sibling-info strong { display: block; margin-bottom: 3px; }
+
+    .edit-actions { display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+
+    /* Empty / loading state */
+    .empty-state {
+      text-align: center; padding: 50px 20px; color: var(--gray);
+      background: white; border-radius: 10px; font-size: 14px;
+    }
+    .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
+    .empty-state p { margin-bottom: 6px; }
+
+    /* Download bar */
+    .download-bar {
+      position: sticky; bottom: 20px; background: white; border-radius: 10px;
+      padding: 14px 20px; box-shadow: 0 4px 20px rgba(0,0,0,.12);
+      display: none; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap; margin-top: 20px; border-left: 4px solid var(--green);
+    }
+    .download-bar span { font-size: 13px; color: var(--gray); }
+    .download-bar .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: #1a202c; color: white; padding: 10px 20px; border-radius: 8px;
+      font-size: 14px; opacity: 0; transition: all .3s; z-index: 999; white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="topbar">
+    <h1>📍 Toewijzing beheren</h1>
+    <a href="beheer.html">← Terug naar beheer</a>
+  </div>
+
+  <!-- Action bar -->
+  <div class="actionbar">
+    <input type="text" class="search-big" id="searchInput"
+           placeholder="🔍 Zoek op postcode, gemeente of filiaal..."
+           oninput="handleSearch()" autocomplete="off">
+    <button class="btn btn-green" onclick="toggleAddForm()">＋ Nieuwe toewijzing</button>
+  </div>
+
+  <!-- Add form -->
+  <div class="add-form-card" id="addFormCard">
+    <div class="add-form-header">
+      <span>➕ Nieuwe postcode / gemeente toevoegen</span>
+      <button onclick="toggleAddForm()" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div class="add-form-body">
+      <div class="add-row">
+        <div class="field">
+          <label>Postcode *</label>
+          <input type="number" id="add_pc" placeholder="3500" min="1000" max="9999">
+        </div>
+        <div class="field">
+          <label>Gemeente *</label>
+          <input type="text" id="add_city" placeholder="Bijv. Hasselt">
+        </div>
+        <div class="field">
+          <label>Filiaal *</label>
+          <select id="add_branch"><option value="">-- Kies filiaal --</option></select>
+        </div>
+        <div style="padding-bottom:2px;">
+          <button class="btn btn-green" onclick="addEntry()">Toevoegen</button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--gray);margin-top:10px;">
+        💡 Eén gemeente kan aan meerdere filialen gekoppeld zijn — voeg ze één voor één toe.
+        Een postcode mag meerdere gemeenten bevatten.
+      </p>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- Results -->
+  <div id="resultsSection" style="display:none;">
+    <div class="results-header">
+      <span class="results-count" id="resultsCount"></span>
+    </div>
+    <div id="resultsList"></div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" id="emptyState">
+    <div class="icon">📍</div>
+    <p><strong>Zoek naar een postcode, gemeente of filiaal</strong></p>
+    <p>Typ minstens 2 tekens om resultaten te zien.</p>
+  </div>
+
+  <!-- Download bar -->
+  <div class="download-bar" id="downloadBar">
+    <span>Klaar met aanpassen? Download beide bestanden en upload naar GitHub.</span>
+    <div class="btn-group">
+      <button class="btn btn-green" onclick="downloadFile('filialen_data.json')">⬇ filialen_data.json</button>
+      <button class="btn btn-blue"  onclick="downloadFile('city_lookup.json')">⬇ city_lookup.json</button>
+    </div>
+  </div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let filiaalData = {};   // filialen_data.json
+  let cityData    = {};   // city_lookup.json
+  let isDirty     = false;
+  let openEditKey = null; // "city::postcode" of open edit panel
+
+  // ── Load ───────────────────────────────────────────────────────────────────
+  Promise.all([
+    fetch('filialen_data.json').then(r => r.json()),
+    fetch('city_lookup.json').then(r => r.json())
+  ]).then(([fd, cd]) => {
+    filiaalData = fd;
+    cityData    = cd;
+    populateBranchSelects();
+    renderStats();
+  }).catch(err => {
+    console.error(err);
+    document.getElementById('emptyState').innerHTML =
+      '<div class="icon">⚠️</div><p><strong>Kon data niet laden</strong></p><p>Controleer of filialen_data.json en city_lookup.json aanwezig zijn.</p>';
+  });
+
+  function populateBranchSelects() {
+    const opts = Object.entries(filiaalData)
+      .sort((a,b) => (a[1].displayName||a[0]).localeCompare(b[1].displayName||b[0]))
+      .map(([k,v]) => `<option value="${k}">${esc(v.displayName||k)}</option>`)
+      .join('');
+    document.getElementById('add_branch').innerHTML = '<option value="">-- Kies filiaal --</option>' + opts;
+  }
+
+  function renderStats() {
+    const uniquePC = new Set();
+    let totalEntries = 0;
+    Object.values(cityData).forEach(arr => {
+      arr.forEach(e => { uniquePC.add(e.postcode); totalEntries++; });
+    });
+    document.getElementById('statsBar').innerHTML = `
+      <div class="stat-pill"><strong>${Object.keys(filiaalData).length}</strong> Filialen</div>
+      <div class="stat-pill"><strong>${uniquePC.size}</strong> Unieke postcodes</div>
+      <div class="stat-pill"><strong>${Object.keys(cityData).length}</strong> Gemeenten</div>
+      <div class="stat-pill"><strong>${totalEntries}</strong> Koppelingen</div>
+    `;
+  }
+
+  // ── Search ─────────────────────────────────────────────────────────────────
+  function handleSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (q.length < 2) {
+      document.getElementById('resultsSection').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'block';
+      return;
+    }
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('resultsSection').style.display = 'block';
+    renderResults(q);
+  }
+
+  function renderResults(q) {
+    const qNorm  = norm(q);
+    const isPC   = /^\d+$/.test(q);
+
+    // Build matching entries: {postcode, city, branches:[key,...]}
+    // Group by postcode
+    const groups = {}; // postcode -> {cities: {cityName -> [branch,...]}}
+
+    Object.entries(cityData).forEach(([city, list]) => {
+      list.forEach(({postcode, branch}) => {
+        const pcStr    = String(postcode);
+        const cityNorm = norm(city);
+        const brName   = norm(filiaalData[branch]?.displayName || branch);
+
+        const matches = isPC
+          ? pcStr.startsWith(q)
+          : (cityNorm.includes(qNorm) || norm(branch).includes(qNorm) || brName.includes(qNorm));
+
+        if (!matches) return;
+        if (!groups[postcode]) groups[postcode] = { cities: {} };
+        if (!groups[postcode].cities[city]) groups[postcode].cities[city] = [];
+        if (!groups[postcode].cities[city].includes(branch)) {
+          groups[postcode].cities[city].push(branch);
+        }
+      });
+    });
+
+    const sortedPCs = Object.keys(groups).map(Number).sort((a,b)=>a-b);
+    const count = sortedPCs.reduce((s, pc) => s + Object.keys(groups[pc].cities).length, 0);
+    document.getElementById('resultsCount').textContent = `${count} gemeente${count===1?'':'n'} gevonden in ${sortedPCs.length} postcode${sortedPCs.length===1?'':'s'}`;
+
+    const list = document.getElementById('resultsList');
+    list.innerHTML = '';
+
+    if (!sortedPCs.length) {
+      list.innerHTML = '<div class="empty-state" style="padding:30px;"><p>Geen resultaten voor "' + esc(q) + '".</p></div>';
+      return;
+    }
+
+    sortedPCs.forEach(pc => {
+      const grp     = groups[pc];
+      const cities  = Object.keys(grp.cities).sort();
+
+      // All branches assigned to this postcode (across all cities)
+      const allBranchesForPC = new Set();
+      Object.values(grp.cities).forEach(arr => arr.forEach(b => allBranchesForPC.add(b)));
+
+      const groupEl = document.createElement('div');
+      groupEl.className = 'entry-group';
+      groupEl.innerHTML = `
+        <div class="entry-group-header">
+          <span class="pc-badge">${pc}</span>
+          <span>${cities.length} gemeente${cities.length===1?'':'n'}</span>
+          <span style="font-size:12px;color:var(--gray);margin-left:auto;">
+            ${[...allBranchesForPC].map(b => esc(filiaalData[b]?.displayName||b)).join(', ')}
+          </span>
+        </div>
+      `;
+
+      cities.forEach(city => {
+        const branches  = grp.cities[city];
+        const editId    = `${city}::${pc}`;
+        const isOpen    = openEditKey === editId;
+
+        const rowEl = document.createElement('div');
+        rowEl.className = 'entry-row' + (isOpen ? ' selected' : '');
+        rowEl.id = 'row-' + CSS.escape(editId);
+
+        const chipsHTML = branches.map(b => {
+          const name = filiaalData[b]?.displayName || b;
+          return `<span class="branch-chip">${esc(name)}</span>`;
+        }).join('');
+
+        // Other branches same PC with different city
+        const siblings = [...allBranchesForPC].filter(b => !branches.includes(b));
+        const sibChips = siblings.map(b => {
+          const name = filiaalData[b]?.displayName || b;
+          return `<span class="branch-chip extra" title="Via andere gemeente">${esc(name)}</span>`;
+        }).join('');
+
+        rowEl.innerHTML = `
+          <div class="entry-city">${esc(city)}</div>
+          <div class="entry-branches">${chipsHTML}${sibChips}</div>
+          <button class="entry-edit-btn" onclick="event.stopPropagation(); toggleEditPanel('${escAttr(editId)}', ${pc}, '${escAttr(city)}')">✏ Bewerken</button>
+        `;
+        rowEl.addEventListener('click', () => toggleEditPanel(editId, pc, city));
+        groupEl.appendChild(rowEl);
+
+        // Edit panel
+        const panelEl = document.createElement('div');
+        panelEl.className = 'edit-panel' + (isOpen ? ' open' : '');
+        panelEl.id = 'panel-' + CSS.escape(editId);
+        panelEl.innerHTML = buildEditPanel(editId, pc, city, branches, siblings);
+        groupEl.appendChild(panelEl);
+      });
+
+      list.appendChild(groupEl);
+    });
+  }
+
+  function buildEditPanel(editId, pc, city, assignedBranches, siblingBranches) {
+    const chipsHTML = assignedBranches.map(b => {
+      const name = filiaalData[b]?.displayName || b;
+      return `<span class="chip chip-assigned">
+        ${esc(name)}
+        <button class="chip-remove" onclick="removeBranch('${escAttr(editId)}', ${pc}, '${escAttr(city)}', '${b}')" title="Verwijder koppeling">×</button>
+      </span>`;
+    }).join('') || '<span style="color:var(--gray);font-size:13px;">Geen filialen gekoppeld</span>';
+
+    const availableBranches = Object.keys(filiaalData)
+      .filter(k => !assignedBranches.includes(k))
+      .sort((a,b) => (filiaalData[a].displayName||a).localeCompare(filiaalData[b].displayName||b));
+
+    const addOpts = availableBranches.map(k =>
+      `<option value="${k}">${esc(filiaalData[k].displayName||k)}</option>`
+    ).join('');
+
+    const sibInfo = siblingBranches.length
+      ? `<div class="sibling-info">
+           <strong>ℹ️ Andere filialen met postcode ${pc} (via andere gemeenten):</strong>
+           ${siblingBranches.map(b => esc(filiaalData[b]?.displayName||b)).join(', ')}
+         </div>`
+      : '';
+
+    return `
+      <div class="edit-panel-title">✏️ ${esc(city)} — postcode ${pc}</div>
+      ${sibInfo}
+      <div class="assignment-section">
+        <div class="assignment-label">Gekoppelde filialen</div>
+        <div class="chips-row" id="chips-${CSS.escape(editId)}">${chipsHTML}</div>
+        <div class="add-branch-row">
+          <select id="newbr-${CSS.escape(editId)}">
+            <option value="">+ Filiaal toevoegen...</option>
+            ${addOpts}
+          </select>
+          <button class="btn btn-blue btn-sm" onclick="addBranchToEntry('${escAttr(editId)}', ${pc}, '${escAttr(city)}')">Toevoegen</button>
+        </div>
+      </div>
+      <div class="assignment-section">
+        <div class="assignment-label">Gemeente naam aanpassen</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="city-edit-${CSS.escape(editId)}" value="${esc(city)}" style="padding:7px 10px;border:2px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;flex:1;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border)'">
+          <button class="btn btn-green btn-sm" onclick="renameCity('${escAttr(editId)}', ${pc}, '${escAttr(city)}')">Naam opslaan</button>
+        </div>
+      </div>
+      <div class="edit-actions">
+        <button class="btn btn-ghost btn-sm" onclick="toggleEditPanel('${escAttr(editId)}', ${pc}, '${escAttr(city)}')">Sluiten</button>
+        <button class="btn btn-sm" style="margin-left:auto;background:var(--red-soft);color:var(--red);border:1px solid #feb2b2;"
+                onclick="deleteEntry('${escAttr(editId)}', ${pc}, '${escAttr(city)}')">🗑 Volledige rij verwijderen</button>
+      </div>
+    `;
+  }
+
+  function toggleEditPanel(editId, pc, city) {
+    const panel = document.getElementById('panel-' + CSS.escape(editId));
+    const row   = document.getElementById('row-'   + CSS.escape(editId));
+    if (!panel) return;
+    const isOpen = panel.classList.contains('open');
+
+    // Close any other open panel first
+    if (openEditKey && openEditKey !== editId) {
+      const oldPanel = document.getElementById('panel-' + CSS.escape(openEditKey));
+      const oldRow   = document.getElementById('row-'   + CSS.escape(openEditKey));
+      if (oldPanel) oldPanel.classList.remove('open');
+      if (oldRow)   oldRow.classList.remove('selected');
+    }
+
+    panel.classList.toggle('open', !isOpen);
+    row?.classList.toggle('selected', !isOpen);
+    openEditKey = !isOpen ? editId : null;
+  }
+
+  // ── Add new entry ──────────────────────────────────────────────────────────
+  function toggleAddForm() {
+    const c = document.getElementById('addFormCard');
+    c.classList.toggle('open');
+    if (c.classList.contains('open')) document.getElementById('add_pc').focus();
+  }
+
+  function addEntry() {
+    const pc     = parseInt(document.getElementById('add_pc').value);
+    const city   = document.getElementById('add_city').value.trim();
+    const branch = document.getElementById('add_branch').value;
+
+    if (!pc || pc < 1000 || pc > 9999) { alert('Voer een geldige postcode in (1000-9999).'); return; }
+    if (!city) { alert('Voer een gemeentenaam in.'); return; }
+    if (!branch) { alert('Kies een filiaal.'); return; }
+
+    // Add to cityData
+    if (!cityData[city]) cityData[city] = [];
+    const exists = cityData[city].some(e => e.postcode === pc && e.branch === branch);
+    if (exists) { alert('Deze combinatie bestaat al.'); return; }
+    cityData[city].push({ postcode: pc, branch });
+
+    // Sync to filiaalData
+    if (!filiaalData[branch].postcodes) filiaalData[branch].postcodes = [];
+    if (!filiaalData[branch].postcodes.includes(pc)) filiaalData[branch].postcodes.push(pc);
+
+    isDirty = true;
+    document.getElementById('downloadBar').style.display = 'flex';
+    renderStats();
+
+    // Set search to the new pc and refresh
+    document.getElementById('searchInput').value = String(pc);
+    handleSearch();
+    openEditKey = null;
+
+    document.getElementById('add_pc').value = '';
+    document.getElementById('add_city').value = '';
+    document.getElementById('add_branch').value = '';
+    toggleAddForm();
+
+    showToast(`✓ ${city} (${pc}) → ${filiaalData[branch].displayName||branch} toegevoegd`);
+  }
+
+  // ── Add branch to existing entry ───────────────────────────────────────────
+  function addBranchToEntry(editId, pc, city) {
+    const sel = document.getElementById('newbr-' + CSS.escape(editId));
+    const branch = sel?.value;
+    if (!branch) { alert('Kies een filiaal.'); return; }
+
+    if (!cityData[city]) cityData[city] = [];
+    cityData[city].push({ postcode: pc, branch });
+    if (!filiaalData[branch].postcodes.includes(pc)) filiaalData[branch].postcodes.push(pc);
+
+    isDirty = true;
+    document.getElementById('downloadBar').style.display = 'flex';
+    openEditKey = editId;
+    renderStats();
+    renderResults(document.getElementById('searchInput').value.trim());
+    showToast(`✓ ${filiaalData[branch].displayName||branch} toegevoegd aan ${city}`);
+  }
+
+  // ── Remove branch from entry ──────────────────────────────────────────────
+  function removeBranch(editId, pc, city, branch) {
+    const remaining = (cityData[city] || []).filter(e => !(e.postcode === pc && e.branch === branch));
+    if (cityData[city].length === 1) {
+      if (!confirm(`Dit is de enige koppeling voor "${city}" (${pc}). De gemeenterij wordt volledig verwijderd. Doorgaan?`)) return;
+    }
+    cityData[city] = remaining;
+    if (cityData[city].length === 0) delete cityData[city];
+
+    // Remove pc from filiaalData[branch].postcodes if no other city still links to it
+    const stillLinked = Object.values(cityData).some(arr => arr.some(e => e.postcode === pc && e.branch === branch));
+    if (!stillLinked && filiaalData[branch]) {
+      filiaalData[branch].postcodes = (filiaalData[branch].postcodes || []).filter(p => p !== pc);
+    }
+
+    isDirty = true;
+    document.getElementById('downloadBar').style.display = 'flex';
+    renderStats();
+
+    // If row was removed entirely, close edit and re-render
+    const rowStillExists = (cityData[city] || []).some(e => e.postcode === pc);
+    if (!rowStillExists) openEditKey = null;
+    else openEditKey = editId;
+    renderResults(document.getElementById('searchInput').value.trim());
+    showToast(`✓ Koppeling verwijderd`);
+  }
+
+  // ── Rename city ────────────────────────────────────────────────────────────
+  function renameCity(editId, pc, oldCity) {
+    const newCity = document.getElementById('city-edit-' + CSS.escape(editId))?.value.trim();
+    if (!newCity || newCity === oldCity) return;
+    if (cityData[newCity]) {
+      if (!confirm(`"${newCity}" bestaat al. De rijen worden samengevoegd. Doorgaan?`)) return;
+    }
+
+    const entriesToMove = (cityData[oldCity] || []).filter(e => e.postcode === pc);
+    cityData[oldCity] = (cityData[oldCity] || []).filter(e => e.postcode !== pc);
+    if (cityData[oldCity].length === 0) delete cityData[oldCity];
+
+    if (!cityData[newCity]) cityData[newCity] = [];
+    entriesToMove.forEach(e => {
+      if (!cityData[newCity].some(x => x.postcode === e.postcode && x.branch === e.branch)) {
+        cityData[newCity].push(e);
+      }
+    });
+
+    isDirty = true;
+    openEditKey = null;
+    document.getElementById('downloadBar').style.display = 'flex';
+    renderStats();
+    renderResults(document.getElementById('searchInput').value.trim());
+    showToast(`✓ Gemeente hernoemd naar "${newCity}"`);
+  }
+
+  // ── Delete full entry (city + pc) ──────────────────────────────────────────
+  function deleteEntry(editId, pc, city) {
+    if (!confirm(`Verwijder alle koppelingen voor "${city}" (postcode ${pc})?`)) return;
+
+    const toRemove = (cityData[city] || []).filter(e => e.postcode === pc);
+    cityData[city] = (cityData[city] || []).filter(e => e.postcode !== pc);
+    if (cityData[city].length === 0) delete cityData[city];
+
+    // Sync postcodes in filiaalData
+    toRemove.forEach(({branch}) => {
+      const stillLinked = Object.values(cityData).some(arr => arr.some(e => e.postcode === pc && e.branch === branch));
+      if (!stillLinked && filiaalData[branch]) {
+        filiaalData[branch].postcodes = (filiaalData[branch].postcodes || []).filter(p => p !== pc);
+      }
+    });
+
+    isDirty = true;
+    openEditKey = null;
+    document.getElementById('downloadBar').style.display = 'flex';
+    renderStats();
+    renderResults(document.getElementById('searchInput').value.trim());
+    showToast('🗑 Rij verwijderd');
+  }
+
+  // ── Download ───────────────────────────────────────────────────────────────
+  function downloadFile(name) {
+    const content = name === 'filialen_data.json'
+      ? JSON.stringify(filiaalData, null, 2)
+      : JSON.stringify(cityData, null, 2);
+    const blob = new Blob([content], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = name; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function norm(s) {
+    return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  }
+  function esc(s)     { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+  function escAttr(s) { return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.opacity = '1';
+    t.style.transform = 'translateX(-50%) translateY(0)';
+    clearTimeout(t._to);
+    t._to = setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(20px)'; }, 2500);
+  }
+</script>
+</body>
+</html>
