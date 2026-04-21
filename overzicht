@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overzicht – Autoglass Clinic</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #2c7be5; --blue-soft: #ebf4ff;
+      --green: #38a169; --green-soft: #f0fff4;
+      --orange: #dd6b20; --orange-soft: #fffaf0;
+      --gray: #718096; --gray-soft: #f7fafc;
+      --border: #e2e8f0; --text: #1a202c; --text-soft: #4a5568;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8; color: var(--text);
+      padding: 30px 20px 60px;
+    }
+
+    /* ── Screen layout ── */
+    .page { max-width: 1100px; margin: 0 auto; }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+    }
+    .topbar-left h1 { font-size: 22px; font-weight: 700; color: var(--blue); }
+    .topbar-left p  { font-size: 13px; color: var(--gray); margin-top: 3px; }
+    .topbar-right { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border: none; border-radius: 7px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; text-decoration: none; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-blue  { background: var(--blue); color: white; }
+    .btn-blue:hover  { background: #1a68d4; }
+    .btn-ghost { background: white; color: var(--gray); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-print { background: #1a202c; color: white; }
+    .btn-print:hover { background: #2d3748; }
+
+    /* ── Filter tabs ── */
+    .tabs {
+      display: flex; gap: 4px; margin-bottom: 20px;
+      background: white; border-radius: 10px; padding: 6px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+    }
+    .tab {
+      flex: 1; padding: 9px 14px; border-radius: 7px; cursor: pointer;
+      font-size: 13px; font-weight: 600; text-align: center;
+      color: var(--gray); transition: all .15s; border: none; background: none;
+    }
+    .tab.active { background: var(--blue); color: white; }
+    .tab:hover:not(.active) { background: var(--gray-soft); }
+
+    /* ── Summary strip ── */
+    .summary-strip {
+      display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .stat { background: white; border-radius: 8px; padding: 14px 18px; border: 1px solid var(--border); min-width: 130px; }
+    .stat .num { font-size: 26px; font-weight: 800; color: var(--blue); }
+    .stat .lbl { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+    /* ── Section ── */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── Filialen grid ── */
+    .filialen-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 14px;
+    }
+    .filiaal-card {
+      background: white; border-radius: 10px; border: 1px solid var(--border);
+      overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .fc-header {
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+    }
+    .fc-header-left h3 { font-size: 15px; font-weight: 700; }
+    .fc-header-left .fc-key { font-size: 11px; color: var(--gray); margin-top: 2px; }
+    .fc-badges { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .badge-sf { background: var(--blue-soft); color: var(--blue); }
+    .badge-pm { background: #fefcbf; color: #975a16; }
+    .badge-pc { background: var(--gray-soft); color: var(--gray); }
+    .badge-verlof { background: var(--orange-soft); color: var(--orange); }
+
+    .fc-body { padding: 14px 18px; }
+    .fc-row { display: flex; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+    .fc-row:last-child { margin-bottom: 0; }
+    .fc-icon { width: 18px; flex-shrink: 0; color: var(--gray); text-align: center; margin-top: 1px; }
+    .fc-val  { color: var(--text-soft); flex: 1; line-height: 1.5; }
+    .fc-val a { color: var(--blue); text-decoration: none; }
+    .fc-val a:hover { text-decoration: underline; }
+
+    .fc-verlof {
+      background: var(--orange-soft); border-left: 3px solid var(--orange);
+      padding: 8px 12px; margin: 10px 18px 14px; border-radius: 5px;
+      font-size: 12px; color: #744210; display: none;
+    }
+    .fc-verlof.visible { display: block; }
+    .fc-verlof strong { display: block; margin-bottom: 2px; }
+
+    .fc-pcs {
+      padding: 10px 18px 14px; border-top: 1px solid var(--border);
+      font-size: 12px; color: var(--gray);
+    }
+    .pc-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .pc-chip { background: var(--gray-soft); border: 1px solid var(--border); color: var(--text-soft); padding: 2px 7px; border-radius: 5px; font-size: 11px; }
+
+    /* ── Verlof table ── */
+    .verlof-table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 5px rgba(0,0,0,.07); font-size: 14px; }
+    th { background: var(--gray-soft); padding: 11px 16px; text-align: left; font-weight: 700; font-size: 12px; color: var(--gray); text-transform: uppercase; letter-spacing: .4px; border-bottom: 2px solid var(--border); }
+    td { padding: 11px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafbff; }
+    .verlof-open { color: var(--green); font-weight: 600; }
+    .verlof-gepland { color: var(--orange); font-weight: 600; }
+
+    /* ── Toewijzing list ── */
+    .toewijzing-search {
+      display: flex; gap: 10px; margin-bottom: 16px;
+    }
+    .toewijzing-input {
+      flex: 1; padding: 10px 14px; border: 2px solid var(--border); border-radius: 8px;
+      font-size: 14px; font-family: inherit; transition: border-color .15s;
+    }
+    .toewijzing-input:focus { border-color: var(--blue); outline: none; }
+
+    .tz-group {
+      background: white; border-radius: 10px; border: 1px solid var(--border);
+      box-shadow: 0 1px 4px rgba(0,0,0,.05); margin-bottom: 10px; overflow: hidden;
+    }
+    .tz-header {
+      padding: 11px 16px; background: var(--gray-soft); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px; cursor: pointer;
+    }
+    .tz-header:hover { background: #edf2f7; }
+    .tz-pc-badge { background: var(--blue-soft); color: var(--blue); font-size: 13px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+    .tz-count { font-size: 12px; color: var(--gray); }
+    .tz-branches-preview { margin-left: auto; font-size: 12px; color: var(--gray); }
+    .tz-body { display: none; }
+    .tz-body.open { display: block; }
+    .tz-row { display: flex; align-items: center; padding: 9px 16px; border-bottom: 1px solid var(--border); gap: 12px; }
+    .tz-row:last-child { border-bottom: none; }
+    .tz-city { font-size: 13px; font-weight: 500; flex: 1; }
+    .branch-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+    .branch-chip { background: var(--blue-soft); color: var(--blue); font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+
+    /* ── Loading/error state ── */
+    .loading { text-align: center; padding: 60px 20px; color: var(--gray); }
+    .loading .spin { font-size: 36px; display: block; margin-bottom: 12px; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Print styles ── */
+    @media print {
+      body { background: white; padding: 0; font-size: 11pt; }
+      .topbar, .tabs, .btn, .toewijzing-search { display: none !important; }
+      .summary-strip { margin-bottom: 14pt; }
+      .stat { border: 1pt solid #ccc; }
+      .section { display: block !important; page-break-before: always; }
+      .section:first-of-type { page-break-before: avoid; }
+      .section > h2 { font-size: 16pt; margin-bottom: 10pt; }
+      .filialen-grid { grid-template-columns: 1fr 1fr; gap: 8pt; }
+      .filiaal-card { border: 1pt solid #ccc; break-inside: avoid; }
+      .tz-body { display: block !important; }
+      .tz-header { cursor: default; background: #f5f5f5; }
+      .page { max-width: 100%; }
+      table { font-size: 10pt; }
+      a { color: inherit !important; text-decoration: none !important; }
+    }
+
+    .section-title {
+      font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 16px;
+      padding-bottom: 10px; border-bottom: 2px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title .count-badge {
+      background: var(--blue-soft); color: var(--blue); font-size: 13px;
+      padding: 2px 9px; border-radius: 10px; font-weight: 700;
+    }
+
+    @media (max-width: 600px) {
+      .tabs { flex-wrap: wrap; }
+      .tab  { min-width: 80px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>📋 Overzicht Filialen</h1>
+      <p id="genTimestamp">Laden...</p>
+    </div>
+    <div class="topbar-right">
+      <a href="beheer.html" class="btn btn-ghost">← Beheer</a>
+      <button class="btn btn-print" onclick="window.print()">🖨 Afdrukken / PDF</button>
+    </div>
+  </div>
+
+  <!-- Summary strip -->
+  <div class="summary-strip" id="summaryStrip">
+    <div class="loading"><span class="spin">⏳</span></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('filialen')">🏢 Filialen</button>
+    <button class="tab"        onclick="switchTab('verlof')">🏖 Verlofperiodes</button>
+    <button class="tab"        onclick="switchTab('toewijzing')">📍 Toewijzing</button>
+  </div>
+
+  <!-- Filialen section -->
+  <div class="section active" id="sec-filialen">
+    <div class="section-title">Alle filialen <span class="count-badge" id="cnt-filialen">–</span></div>
+    <div class="filialen-grid" id="filialenGrid"></div>
+  </div>
+
+  <!-- Verlof section -->
+  <div class="section" id="sec-verlof">
+    <div class="section-title">Verlofperiodes overzicht <span class="count-badge" id="cnt-verlof">–</span></div>
+    <div class="verlof-table-wrap">
+      <table id="verlofTable">
+        <thead>
+          <tr>
+            <th>Filiaal</th>
+            <th>Verantwoordelijke</th>
+            <th>Status</th>
+            <th>Verlofperiode</th>
+          </tr>
+        </thead>
+        <tbody id="verlofBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Toewijzing section -->
+  <div class="section" id="sec-toewijzing">
+    <div class="section-title">Postcode &amp; gemeente toewijzing <span class="count-badge" id="cnt-toewijzing">–</span></div>
+    <div class="toewijzing-search">
+      <input type="text" class="toewijzing-input" id="tzSearch"
+             placeholder="🔍 Filter op postcode, gemeente of filiaal..."
+             oninput="filterToewijzing()">
+    </div>
+    <div id="toewijzingList"></div>
+  </div>
+
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let filiaalData = {};
+  let verlofData  = {};
+  let cityData    = {};
+  let currentTab  = 'filialen';
+
+  // ── Load ───────────────────────────────────────────────────────────────────
+  Promise.all([
+    fetch('filialen_data.json').then(r => r.json()),
+    fetch('verlof.json').then(r => r.json()),
+    fetch('city_lookup.json').then(r => r.json())
+  ]).then(([fd, vd, cd]) => {
+    filiaalData = fd;
+    verlofData  = vd;
+    cityData    = cd;
+    renderAll();
+  }).catch(err => {
+    document.getElementById('summaryStrip').innerHTML =
+      '<p style="color:#e53e3e;padding:20px;">⚠️ Kon data niet laden. Controleer of alle JSON-bestanden aanwezig zijn.</p>';
+    console.error(err);
+  });
+
+  // ── Render all ─────────────────────────────────────────────────────────────
+  function renderAll() {
+    const now = new Date();
+    document.getElementById('genTimestamp').textContent =
+      'Gegenereerd op ' + now.toLocaleDateString('nl-BE', {weekday:'long', year:'numeric', month:'long', day:'numeric'})
+      + ' om ' + now.toLocaleTimeString('nl-BE', {hour:'2-digit', minute:'2-digit'});
+
+    // Compute stats
+    const totalPCs = new Set();
+    Object.values(cityData).forEach(arr => arr.forEach(e => totalPCs.add(e.postcode)));
+    const verlofCount = Object.entries(verlofData).filter(([k,v]) => v && !k.startsWith('_')).length;
+
+    document.getElementById('summaryStrip').innerHTML = `
+      <div class="stat"><div class="num">${Object.keys(filiaalData).length}</div><div class="lbl">Filialen</div></div>
+      <div class="stat"><div class="num">${totalPCs.size}</div><div class="lbl">Postcodes</div></div>
+      <div class="stat"><div class="num">${Object.keys(cityData).length}</div><div class="lbl">Gemeenten</div></div>
+      <div class="stat"><div class="num" style="color:var(--orange);">${verlofCount}</div><div class="lbl">Gepland verlof</div></div>
+    `;
+
+    renderFilialen();
+    renderVerlof();
+    renderToewijzing('');
+  }
+
+  // ── Filialen ───────────────────────────────────────────────────────────────
+  function renderFilialen() {
+    const keys = Object.keys(filiaalData).sort((a,b) =>
+      (filiaalData[a].displayName||a).localeCompare(filiaalData[b].displayName||b));
+    document.getElementById('cnt-filialen').textContent = keys.length;
+
+    const grid = document.getElementById('filialenGrid');
+    grid.innerHTML = '';
+
+    keys.forEach(key => {
+      const b      = filiaalData[key];
+      const verlof = (verlofData[key] || b.verlof || '').trim();
+
+      const card = document.createElement('div');
+      card.className = 'filiaal-card';
+
+      const pcs = (b.postcodes || []).sort((a,b)=>a-b);
+      const pcChips = pcs.map(p => `<span class="pc-chip">${p}</span>`).join('');
+
+      // Get cities linked to this branch
+      const cities = {};
+      Object.entries(cityData).forEach(([city, list]) => {
+        list.forEach(e => {
+          if (e.branch === key) {
+            if (!cities[e.postcode]) cities[e.postcode] = [];
+            cities[e.postcode].push(city);
+          }
+        });
+      });
+
+      card.innerHTML = `
+        <div class="fc-header">
+          <div class="fc-header-left">
+            <h3>${esc(b.displayName || key)}</h3>
+            <div class="fc-key">${esc(key)}</div>
+          </div>
+          <div class="fc-badges">
+            <span class="badge ${b.inSalesForce ? 'badge-sf' : 'badge-pm'}">${b.inSalesForce ? 'Sales Force' : 'Planmanager'}</span>
+            <span class="badge badge-pc">${pcs.length} postcodes</span>
+            ${verlof ? '<span class="badge badge-verlof">Verlof gepland</span>' : ''}
+          </div>
+        </div>
+        ${verlof ? `<div class="fc-verlof visible"><strong>🏖 Verlofperiode:</strong>${esc(verlof)}</div>` : ''}
+        <div class="fc-body">
+          ${b.verantwoordelijke ? `<div class="fc-row"><div class="fc-icon">👤</div><div class="fc-val">${esc(b.verantwoordelijke)}</div></div>` : ''}
+          ${b.address   ? `<div class="fc-row"><div class="fc-icon">📍</div><div class="fc-val">${esc(b.address)}</div></div>` : ''}
+          ${b.phone     ? `<div class="fc-row"><div class="fc-icon">📞</div><div class="fc-val">${esc(b.phone)}</div></div>` : ''}
+          ${b.email     ? `<div class="fc-row"><div class="fc-icon">✉️</div><div class="fc-val"><a href="mailto:${esc(b.email)}">${esc(b.email)}</a></div></div>` : ''}
+          ${b.hours     ? `<div class="fc-row"><div class="fc-icon">🕐</div><div class="fc-val">${esc(b.hours).replace(/\n/g,'<br>')}</div></div>` : ''}
+        </div>
+        ${pcs.length ? `<div class="fc-pcs"><strong>Postcodes (${pcs.length}):</strong><div class="pc-chips">${pcChips}</div></div>` : ''}
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // ── Verlof ─────────────────────────────────────────────────────────────────
+  function renderVerlof() {
+    const keys = Object.keys(filiaalData).sort((a,b) =>
+      (filiaalData[a].displayName||a).localeCompare(filiaalData[b].displayName||b));
+    const verlofCount = keys.filter(k => (verlofData[k] || '').trim()).length;
+    document.getElementById('cnt-verlof').textContent = `${verlofCount} gepland`;
+
+    const tbody = document.getElementById('verlofBody');
+    tbody.innerHTML = '';
+    keys.forEach(key => {
+      const b      = filiaalData[key];
+      const verlof = (verlofData[key] || b.verlof || '').trim();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${esc(b.displayName||key)}</strong></td>
+        <td>${esc(b.verantwoordelijke||'—')}</td>
+        <td class="${verlof ? 'verlof-gepland' : 'verlof-open'}">${verlof ? '🏖 Gepland' : '✓ Open'}</td>
+        <td>${verlof ? esc(verlof) : '<span style="color:var(--gray);font-style:italic;">—</span>'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ── Toewijzing ─────────────────────────────────────────────────────────────
+  function renderToewijzing(filter) {
+    const q = norm(filter);
+
+    // Group by postcode
+    const groups = {};
+    Object.entries(cityData).forEach(([city, list]) => {
+      list.forEach(({postcode, branch}) => {
+        if (q) {
+          const pcStr   = String(postcode);
+          const cityN   = norm(city);
+          const brN     = norm(filiaalData[branch]?.displayName || branch);
+          const keyN    = norm(branch);
+          if (!pcStr.includes(q) && !cityN.includes(q) && !brN.includes(q) && !keyN.includes(q)) return;
+        }
+        if (!groups[postcode]) groups[postcode] = {};
+        if (!groups[postcode][city]) groups[postcode][city] = [];
+        if (!groups[postcode][city].includes(branch)) groups[postcode][city].push(branch);
+      });
+    });
+
+    const sortedPCs = Object.keys(groups).map(Number).sort((a,b)=>a-b);
+    const totalCities = sortedPCs.reduce((s, pc) => s + Object.keys(groups[pc]).length, 0);
+    document.getElementById('cnt-toewijzing').textContent = `${sortedPCs.length} postcodes · ${totalCities} gemeenten`;
+
+    const list = document.getElementById('toewijzingList');
+    list.innerHTML = '';
+
+    if (!sortedPCs.length) {
+      list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray);background:white;border-radius:10px;">Geen resultaten gevonden.</div>';
+      return;
+    }
+
+    sortedPCs.forEach(pc => {
+      const cities = Object.keys(groups[pc]).sort();
+      const allBranches = [...new Set(Object.values(groups[pc]).flat())];
+      const brPreview = allBranches.map(b => filiaalData[b]?.displayName||b).join(', ');
+
+      const grpEl = document.createElement('div');
+      grpEl.className = 'tz-group';
+
+      const isAutoOpen = q.length > 0 || sortedPCs.length <= 5;
+
+      grpEl.innerHTML = `
+        <div class="tz-header" onclick="toggleTZ(this)">
+          <span class="tz-pc-badge">${pc}</span>
+          <span class="tz-count">${cities.length} gemeente${cities.length===1?'':'n'}</span>
+          <span class="tz-branches-preview">${esc(brPreview)}</span>
+        </div>
+        <div class="tz-body${isAutoOpen ? ' open' : ''}">
+          ${cities.map(city => {
+            const branches = groups[pc][city];
+            const chips = branches.map(b =>
+              `<span class="branch-chip">${esc(filiaalData[b]?.displayName||b)}</span>`
+            ).join('');
+            return `<div class="tz-row">
+              <div class="tz-city">${esc(city)}</div>
+              <div class="branch-chips">${chips}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      `;
+      list.appendChild(grpEl);
+    });
+  }
+
+  function toggleTZ(header) {
+    const body = header.nextElementSibling;
+    body.classList.toggle('open');
+  }
+
+  function filterToewijzing() {
+    renderToewijzing(document.getElementById('tzSearch').value.trim());
+  }
+
+  // ── Tab switching ──────────────────────────────────────────────────────────
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('sec-' + tab).classList.add('active');
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      if (['filialen','verlof','toewijzing'][i] === tab) t.classList.add('active');
+    });
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function norm(s) {
+    return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  }
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>
