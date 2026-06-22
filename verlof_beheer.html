@@ -250,8 +250,7 @@
   </div>
 
   <div class="footer">
-    <button class="btn-genereer" onclick="genereer()">📋 Genereer verlof.json</button>
-    <button class="btn-download" id="btnDownload" onclick="download()">⬇️ Download verlof.json</button>
+    <button class="btn-genereer" id="btnOpslaan" onclick="opslaan()">💾 Opslaan</button>
     <button class="btn-reset" onclick="wisAlles()">Alles wissen</button>
   </div>
 
@@ -327,7 +326,7 @@
   });
 
   // Try loading current verlof.json to pre-fill
-  fetch('verlof.json')
+  fetch('/api/data/verlof')
     .then(r => r.json())
     .then(data => {
       FILIALEN.forEach(({ key }) => {
@@ -358,6 +357,34 @@
 
   // ── Generate ─────────────────────────────────────────────────────────────
   let gegenereerdeJSON = '';
+
+  // ── Direct opslaan naar de server ────────────────────────────────────────
+  async function opslaan() {
+    const btn = document.getElementById('btnOpslaan');
+    const obj = {
+      "_INSTRUCTIES": "Vul de verlofperiode in als tekst tussen aanhalingstekens. Laat leeg als het filiaal gewoon open is. Verander NIETS aan de namen links van de dubbele punt."
+    };
+    FILIALEN.forEach(({ key }) => {
+      obj[key] = (document.getElementById('inp-' + key).value || '').trim();
+    });
+    const vorige = btn.textContent;
+    btn.textContent = 'Bezig met opslaan…';
+    btn.disabled = true;
+    try {
+      const r = await fetch('/api/data/verlof', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(obj, null, 2)
+      });
+      if (!r.ok) throw new Error('server gaf status ' + r.status);
+      btn.textContent = '✓ Opgeslagen!';
+      setTimeout(() => { btn.textContent = vorige; btn.disabled = false; }, 2000);
+    } catch (e) {
+      alert('❌ Opslaan mislukt: ' + e.message + '\n\nProbeer het opnieuw. Blijft het mislukken? Controleer je internetverbinding.');
+      btn.textContent = vorige;
+      btn.disabled = false;
+    }
+  }
 
   function genereer() {
     const obj = {
