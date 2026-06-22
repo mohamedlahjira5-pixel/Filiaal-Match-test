@@ -248,9 +248,9 @@
     async function laadAlles() {
       try {
         const [r1, r2, r3] = await Promise.all([
-          fetch('filialen_data.json'),
-          fetch('verlof.json'),
-          fetch('city_lookup.json')
+          fetch('/api/data/filialen_data'),
+          fetch('/api/data/verlof'),
+          fetch('/api/data/city_lookup')
         ]);
         filiaalData = await r1.json();
         verlofData  = await r2.json();
