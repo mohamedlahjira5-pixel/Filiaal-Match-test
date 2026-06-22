@@ -265,9 +265,9 @@
 
   // ── Load ───────────────────────────────────────────────────────────────────
   Promise.all([
-    fetch('filialen_data.json').then(r => r.json()),
-    fetch('verlof.json').then(r => r.json()),
-    fetch('city_lookup.json').then(r => r.json())
+    fetch('/api/data/filialen_data').then(r => r.json()),
+    fetch('/api/data/verlof').then(r => r.json()),
+    fetch('/api/data/city_lookup').then(r => r.json())
   ]).then(([fd, vd, cd]) => {
     filiaalData = fd;
     verlofData  = vd;
