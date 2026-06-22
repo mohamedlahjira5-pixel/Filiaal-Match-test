@@ -239,8 +239,8 @@
 
   <!-- Download bar -->
   <div class="download-bar" id="downloadBar" style="display:none;">
-    <span>Klaar met aanpassen? Download en upload naar GitHub.</span>
-    <button class="btn btn-green" onclick="downloadJSON()">⬇ Download filialen_data.json</button>
+    <span>Klaar met aanpassen? Klik op Opslaan.</span>
+    <button class="btn btn-green" id="btnOpslaan" onclick="opslaanNaarServer()">💾 Opslaan</button>
   </div>
 
 </div>
@@ -264,7 +264,7 @@
   let isDirty = false;
 
   // ── Load ──────────────────────────────────────────────────────────────────
-  fetch('filialen_data.json')
+  fetch('/api/data/filialen_data')
     .then(r => r.json())
     .then(d => { filiaalData = d; renderBranches(); })
     .catch(() => {
@@ -480,13 +480,27 @@
   }
 
   // ── Download ───────────────────────────────────────────────────────────────
-  function downloadJSON() {
-    const content = JSON.stringify(filiaalData, null, 2);
-    const blob = new Blob([content], { type: 'application/json' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = 'filialen_data.json'; a.click();
-    URL.revokeObjectURL(url);
+  async function opslaanNaarServer() {
+    const btn = document.getElementById('btnOpslaan');
+    const vorige = btn.textContent;
+    btn.textContent = 'Bezig met opslaan…';
+    btn.disabled = true;
+    try {
+      const r = await fetch('/api/data/filialen_data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(filiaalData, null, 2)
+      });
+      if (!r.ok) throw new Error('server gaf status ' + r.status);
+      isDirty = false;
+      btn.textContent = '✓ Opgeslagen!';
+      showToast('✓ Wijzigingen opgeslagen');
+      setTimeout(() => { btn.textContent = vorige; btn.disabled = false; }, 2000);
+    } catch (e) {
+      alert('❌ Opslaan mislukt: ' + e.message + '\n\nProbeer het opnieuw.');
+      btn.textContent = vorige;
+      btn.disabled = false;
+    }
   }
 
   // ── Toast ──────────────────────────────────────────────────────────────────
