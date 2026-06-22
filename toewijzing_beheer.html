@@ -250,10 +250,9 @@
 
   <!-- Download bar -->
   <div class="download-bar" id="downloadBar">
-    <span>Klaar met aanpassen? Download beide bestanden en upload naar GitHub.</span>
+    <span>Klaar met aanpassen? Klik op Opslaan.</span>
     <div class="btn-group">
-      <button class="btn btn-green" onclick="downloadFile('filialen_data.json')">⬇ filialen_data.json</button>
-      <button class="btn btn-blue"  onclick="downloadFile('city_lookup.json')">⬇ city_lookup.json</button>
+      <button class="btn btn-green" id="btnOpslaan" onclick="opslaanNaarServer()">💾 Opslaan</button>
     </div>
   </div>
 
@@ -269,8 +268,8 @@
 
   // ── Load ───────────────────────────────────────────────────────────────────
   Promise.all([
-    fetch('filialen_data.json').then(r => r.json()),
-    fetch('city_lookup.json').then(r => r.json())
+    fetch('/api/data/filialen_data').then(r => r.json()),
+    fetch('/api/data/city_lookup').then(r => r.json())
   ]).then(([fd, cd]) => {
     filiaalData = fd;
     cityData    = cd;
@@ -629,15 +628,31 @@
   }
 
   // ── Download ───────────────────────────────────────────────────────────────
-  function downloadFile(name) {
-    const content = name === 'filialen_data.json'
-      ? JSON.stringify(filiaalData, null, 2)
-      : JSON.stringify(cityData, null, 2);
-    const blob = new Blob([content], { type: 'application/json' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = name; a.click();
-    URL.revokeObjectURL(url);
+  async function opslaanNaarServer() {
+    const btn = document.getElementById('btnOpslaan');
+    const vorige = btn.textContent;
+    btn.textContent = 'Bezig met opslaan…';
+    btn.disabled = true;
+    try {
+      const r1 = await fetch('/api/data/filialen_data', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(filiaalData, null, 2)
+      });
+      if (!r1.ok) throw new Error('filialen: status ' + r1.status);
+      const r2 = await fetch('/api/data/city_lookup', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cityData, null, 2)
+      });
+      if (!r2.ok) throw new Error('city_lookup: status ' + r2.status);
+      isDirty = false;
+      btn.textContent = '✓ Opgeslagen!';
+      showToast('✓ Toewijzingen opgeslagen');
+      setTimeout(() => { btn.textContent = vorige; btn.disabled = false; }, 2000);
+    } catch (e) {
+      alert('❌ Opslaan mislukt: ' + e.message + '\n\nProbeer het opnieuw.');
+      btn.textContent = vorige;
+      btn.disabled = false;
+    }
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
